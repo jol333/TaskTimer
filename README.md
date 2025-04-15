@@ -34,7 +34,7 @@ A simple macOS timer that stays on top of all windows, including fullscreen appl
 ## Usage
 
 - **Click** on the timer to start or pause it
-- The timer will display in the format: HH:MM:SS.T
+- The timer will display in the format: HH:MM:SS
 - The timer stays on top of all windows, including fullscreen applications
 
 ## How It Works
