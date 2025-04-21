@@ -32,13 +32,13 @@ cat > "$APP_NAME.app/Contents/Info.plist" << EOF
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>LSUIElement</key>
-    <false/>
+    <true/>
 </dict>
 </plist>
 EOF
 
 # Compile the Swift code
-swiftc -o "$APP_NAME.app/Contents/MacOS/$APP_NAME" main.swift
+swiftc -o "$APP_NAME.app/Contents/MacOS/$APP_NAME" main.swift TimerWindow.swift TimerView.swift AppDelegate.swift
 
 # Make the executable file executable
 chmod +x "$APP_NAME.app/Contents/MacOS/$APP_NAME"
