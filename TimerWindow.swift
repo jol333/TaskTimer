@@ -2,6 +2,7 @@
 //
 // Contains the `TimerWindow` class responsible for creating and managing
 // the floating, borderless window that auto-hides and expands on hover.
+// Now supports multiple timers with an add button.
 
 import Cocoa
 
@@ -9,18 +10,25 @@ class TimerWindow: NSWindow {
     override var canBecomeKey: Bool { return true }
     override var canBecomeMain: Bool { return true }
 
-    private var timerView: TimerView
+    private var containerView: NSView
+    var timerViews: [TimerView] = []
+    private var addButton: NSButton?
+    private var removeButtons: [NSButton] = []
     private var expandedFrame: NSRect?
     private var compactFrame: NSRect?
     var expanded = true
     private var hideTimer: Timer?
 
     init() {
-        // Create a window that's small, borderless, and stays on top
-        timerView = TimerView(frame: NSRect(x: 0, y: 0, width: 120, height: 80))
+        // Create a container view to hold the timer views and add button
+        containerView = NSView(frame: NSRect(x: 0, y: 0, width: 120, height: 110))
+        
+        // Create the first timer view
+        let firstTimerView = TimerView(frame: NSRect(x: 0, y: 30, width: 120, height: 80))
+        timerViews.append(firstTimerView)
 
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 120, height: 80),
+            contentRect: NSRect(x: 0, y: 0, width: 120, height: 110),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -43,7 +51,7 @@ class TimerWindow: NSWindow {
                 x: screenRect.maxX - 130,
                 y: screenRect.maxY - 120,
                 width: 120,
-                height: 80
+                height: 110
             )
 
             // Compact frame (larger area in the top-right corner when "hidden")
@@ -58,18 +66,55 @@ class TimerWindow: NSWindow {
             setFrame(expandedFrame!, display: true)
         }
 
-        // Set up content view
-        contentView = timerView
+        // Set up container view
+        containerView.wantsLayer = true
+        containerView.layer?.backgroundColor = NSColor.clear.cgColor
+        
+        // Add first timer view to container
+        containerView.addSubview(firstTimerView)
+        
+        // Create and add a remove button for the first timer
+        let removeButton = createRemoveButton(yPosition: 85)
+        containerView.addSubview(removeButton)
+        removeButtons.append(removeButton)
+        
+        // Create and add the "Add Timer" button
+        let addButton = NSButton(frame: NSRect(x: 0, y: 0, width: 120, height: 25))
+        addButton.title = "+ Add Timer"
+        addButton.bezelStyle = .inline
+        addButton.isBordered = false
+        addButton.font = NSFont.systemFont(ofSize: 12)
+        addButton.contentTintColor = .white
+        addButton.wantsLayer = true
+        addButton.layer?.backgroundColor = NSColor.darkGray.withAlphaComponent(0.7).cgColor
+        addButton.layer?.cornerRadius = 5
+        addButton.target = NSApp.delegate
+        addButton.action = #selector(AppDelegate.addNewTimer)
+        
+        containerView.addSubview(addButton)
+        self.addButton = addButton
+        
+        // Set container as content view
+        contentView = containerView
 
-        // Create timer view with mouse tracking
-        timerView.onMouseEnter = { [weak self] in
+        // Set up mouse tracking for the first timer view and add button
+        firstTimerView.onMouseEnter = { [weak self] in
             self?.cancelHideTimer()
             self?.showExpanded()
         }
 
-        timerView.onMouseExit = { [weak self] in
+        firstTimerView.onMouseExit = { [weak self] in
             self?.scheduleHideTimer()
         }
+        
+        // Add tracking area for the add button
+        let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways]
+        let buttonTrackingArea = NSTrackingArea(
+            rect: addButton.bounds,
+            options: options,
+            owner: self,
+            userInfo: nil)
+        addButton.addTrackingArea(buttonTrackingArea)
 
         // Schedule initial hide after 2 seconds
         scheduleHideTimer()
@@ -91,6 +136,17 @@ class TimerWindow: NSWindow {
         hideTimer = nil
     }
 
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        cancelHideTimer()
+        showExpanded()
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        scheduleHideTimer()
+    }
+    
     func showExpanded() {
         guard !expanded, let expandedFrame = expandedFrame else { return }
 
@@ -121,5 +177,156 @@ class TimerWindow: NSWindow {
             completionHandler: {
                 self.expanded = false
             })
+    }
+    
+    // Method to resize the window when timers are added or removed
+    func resizeWindow(height: CGFloat) {
+        guard let expandedFrame = expandedFrame else { return }
+        
+        // Create a new frame with the updated height
+        let newFrame = NSRect(
+            x: expandedFrame.origin.x,
+            y: expandedFrame.origin.y - (height - expandedFrame.height),
+            width: expandedFrame.width,
+            height: height
+        )
+        
+        // Update the expanded frame
+        self.expandedFrame = newFrame
+        
+        // If currently expanded, animate to the new size
+        if expanded {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.3
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                animator().setFrame(newFrame, display: true)
+            })
+        }
+    }
+    
+    // Add a new timer view to this window
+    func addTimerView() {
+        // Calculate position for the new timer view
+        let yPosition = 30 + (timerViews.count * 80)
+        
+        // Create and add a new timer view
+        let newTimerView = TimerView(frame: NSRect(x: 0, y: yPosition, width: 120, height: 80))
+        containerView.addSubview(newTimerView)
+        timerViews.append(newTimerView)
+        
+        // Set up mouse tracking for the new timer view
+        newTimerView.onMouseEnter = { [weak self] in
+            self?.cancelHideTimer()
+            self?.showExpanded()
+        }
+        
+        newTimerView.onMouseExit = { [weak self] in
+            self?.scheduleHideTimer()
+        }
+        
+        // Create and add a remove button for this timer
+        let removeButton = createRemoveButton(yPosition: CGFloat(yPosition) + 55)
+        containerView.addSubview(removeButton)
+        removeButtons.append(removeButton)
+        
+        // Reposition the add button to the bottom
+        if let addButton = self.addButton {
+            addButton.frame.origin.y = 0
+        }
+    }
+    
+    // Remove a timer view at the specified index
+    func removeTimerView(at index: Int) {
+        guard index >= 0 && index < timerViews.count else { return }
+        
+        // Remove the timer view from the container and array
+        let timerView = timerViews[index]
+        timerView.removeFromSuperview()
+        timerViews.remove(at: index)
+        
+        // Remove the associated remove button
+        if index < removeButtons.count {
+            let removeButton = removeButtons[index]
+            
+            // Remove tracking areas from the remove button
+            for trackingArea in removeButton.trackingAreas {
+                removeButton.removeTrackingArea(trackingArea)
+            }
+            
+            removeButton.removeFromSuperview()
+            removeButtons.remove(at: index)
+        }
+        
+        // Reposition remaining timer views and buttons
+        for i in 0..<timerViews.count {
+            let yPosition = 30 + (i * 80)
+            timerViews[i].frame.origin.y = CGFloat(yPosition)
+            
+            if i < removeButtons.count {
+                removeButtons[i].frame.origin.y = CGFloat(yPosition + 55)
+                // Update the tag to match the new index
+                removeButtons[i].tag = i
+            }
+        }
+        
+        // Reposition the add button to the bottom
+        if let addButton = self.addButton {
+            addButton.frame.origin.y = 0
+        }
+    }
+    
+    // Create a remove button for a timer
+    func createRemoveButton(yPosition: CGFloat) -> NSButton {
+        let removeButton = NSButton(frame: NSRect(x: 90, y: yPosition, width: 25, height: 20))
+        removeButton.title = "✕"
+        removeButton.bezelStyle = .inline
+        removeButton.isBordered = false
+        removeButton.font = NSFont.systemFont(ofSize: 10)
+        removeButton.contentTintColor = .white
+        removeButton.wantsLayer = true
+        removeButton.layer?.backgroundColor = NSColor.darkGray.withAlphaComponent(0.5).cgColor
+        removeButton.layer?.cornerRadius = 3
+        removeButton.target = self  // Change target to self instead of AppDelegate
+        removeButton.action = #selector(removeButtonClicked(_:))  // Change action to local method
+        removeButton.tag = removeButtons.count  // Set tag to identify which timer this button belongs to
+        
+        // Add tracking area for the remove button
+        let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways]
+        let buttonTrackingArea = NSTrackingArea(
+            rect: removeButton.bounds,
+            options: options,
+            owner: self,
+            userInfo: nil)
+        removeButton.addTrackingArea(buttonTrackingArea)
+        
+        return removeButton
+    }
+    
+    @objc private func removeButtonClicked(_ sender: NSButton) {
+        removeTimerView(at: sender.tag)
+        
+        // Update the window height
+        let newHeight = CGFloat(30 + (timerViews.count * 80) + 25)  // Base height + (timer count * timer height) + add button height
+        resizeWindow(height: newHeight)
+    }
+    
+    // Called when window is about to close
+    override func close() {
+        // Remove tracking areas to prevent memory leaks
+        // Remove tracking areas from the add button
+        if let addButton = self.addButton {
+            for trackingArea in addButton.trackingAreas {
+                addButton.removeTrackingArea(trackingArea)
+            }
+        }
+        
+        // Remove tracking areas from all remove buttons
+        for button in removeButtons {
+            for trackingArea in button.trackingAreas {
+                button.removeTrackingArea(trackingArea)
+            }
+        }
+        
+        super.close()
     }
 }
