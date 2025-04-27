@@ -38,10 +38,10 @@ cat > "$APP_NAME.app/Contents/Info.plist" << EOF
 EOF
 
 # Compile the Swift code
-swiftc -o "$APP_NAME.app/Contents/MacOS/$APP_NAME" main.swift TimerWindow.swift TimerView.swift AppDelegate.swift
+swiftc -o "$APP_NAME.app/Contents/MacOS/$APP_NAME" main.swift TimerWindow.swift TimerView.swift TimerTextField.swift AppDelegate.swift CursorButton.swift
 
 # Make the executable file executable
 chmod +x "$APP_NAME.app/Contents/MacOS/$APP_NAME"
 
 echo "Build completed."
-echo "To run the app, use: open $APP_NAME.app" 
+echo "To run the app, use: open $APP_NAME.app"

@@ -22,4 +22,4 @@ This is a macOS TaskTimer application written in Swift. Use these rules to navig
 ## Editing Guidance
 
 - When modifying UI layout, update the frame sizes and subview setup in `TimerWindow.swift` and `TimerView.swift`.
-- For build changes, adjust `build.sh` accordingly.
+- For build changes and any new file additions, modify `build.sh` accordingly.

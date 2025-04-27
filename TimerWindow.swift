@@ -6,6 +6,8 @@
 
 import Cocoa
 
+// Import custom button class for cursor handling
+
 class TimerWindow: NSWindow {
     override var canBecomeKey: Bool { return true }
     override var canBecomeMain: Bool { return true }
@@ -79,7 +81,7 @@ class TimerWindow: NSWindow {
         removeButtons.append(removeButton)
         
         // Create and add the "Add Timer" button
-        let addButton = NSButton(frame: NSRect(x: 0, y: 0, width: 120, height: 25))
+        let addButton = CursorButton(frame: NSRect(x: 0, y: 0, width: 120, height: 25))
         addButton.title = "+ Add Timer"
         addButton.bezelStyle = .inline
         addButton.isBordered = false
@@ -107,14 +109,7 @@ class TimerWindow: NSWindow {
             self?.scheduleHideTimer()
         }
         
-        // Add tracking area for the add button
-        let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways]
-        let buttonTrackingArea = NSTrackingArea(
-            rect: addButton.bounds,
-            options: options,
-            owner: self,
-            userInfo: nil)
-        addButton.addTrackingArea(buttonTrackingArea)
+        // CursorButton handles its own tracking area
 
         // Schedule initial hide after 2 seconds
         scheduleHideTimer()
@@ -138,12 +133,16 @@ class TimerWindow: NSWindow {
 
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
+        
+        // For the window itself (buttons handle their own cursor)
         cancelHideTimer()
         showExpanded()
     }
     
     override func mouseExited(with event: NSEvent) {
         super.mouseExited(with: event)
+        
+        // For the window itself (buttons handle their own cursor)
         scheduleHideTimer()
     }
     
@@ -277,7 +276,7 @@ class TimerWindow: NSWindow {
     
     // Create a remove button for a timer
     func createRemoveButton(yPosition: CGFloat) -> NSButton {
-        let removeButton = NSButton(frame: NSRect(x: 90, y: yPosition, width: 25, height: 20))
+        let removeButton = CursorButton(frame: NSRect(x: 90, y: yPosition, width: 25, height: 20))
         removeButton.title = "✕"
         removeButton.bezelStyle = .inline
         removeButton.isBordered = false
@@ -289,15 +288,6 @@ class TimerWindow: NSWindow {
         removeButton.target = self  // Change target to self instead of AppDelegate
         removeButton.action = #selector(removeButtonClicked(_:))  // Change action to local method
         removeButton.tag = removeButtons.count  // Set tag to identify which timer this button belongs to
-        
-        // Add tracking area for the remove button
-        let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways]
-        let buttonTrackingArea = NSTrackingArea(
-            rect: removeButton.bounds,
-            options: options,
-            owner: self,
-            userInfo: nil)
-        removeButton.addTrackingArea(buttonTrackingArea)
         
         return removeButton
     }

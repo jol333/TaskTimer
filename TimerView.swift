@@ -13,7 +13,7 @@ class TimerView: NSView, NSTextFieldDelegate {
     private var timer: Timer?
     private var elapsedTime: TimeInterval = 0
     private var isRunning = false
-    private var timeLabel: NSTextField
+    private var timeLabel: TimerTextField
     private var taskLabel: NSTextField
     private var trackingArea: NSTrackingArea?
 
@@ -38,8 +38,8 @@ class TimerView: NSView, NSTextFieldDelegate {
         taskLabel.placeholderString = "Enter task name"
         taskLabel.focusRingType = .none
 
-        // Create the time display label
-        timeLabel = NSTextField(
+        // Create the time display label with pointing hand cursor
+        timeLabel = TimerTextField(
             frame: NSRect(
                 x: 0, y: 5,
                 width: frameRect.width,
