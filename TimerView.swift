@@ -32,7 +32,7 @@ class TimerView: NSView, NSTextFieldDelegate {
         taskLabel.isBordered = false
         taskLabel.backgroundColor = .clear
         taskLabel.textColor = .white
-        taskLabel.alignment = .center
+        taskLabel.alignment = .left
         taskLabel.font = NSFont.systemFont(ofSize: 14)
         taskLabel.stringValue = "Task name"
         taskLabel.placeholderString = "Enter task name"
