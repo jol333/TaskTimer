@@ -47,16 +47,17 @@ class TimerWindow: NSWindow {
         // Calculate frames for expanded and compact states
         if let screen = NSScreen.main {
             let screenRect = screen.frame  // Use frame instead of visibleFrame to include menu bar area
+            let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 24 // fallback to 24 if not available
 
             // Expanded frame (normal position when visible)
             expandedFrame = NSRect(
                 x: screenRect.maxX - 130,
-                y: screenRect.maxY - 120,
+                y: screenRect.maxY - menuBarHeight - 110, // always below menu bar
                 width: 120,
                 height: 110
             )
 
-            // Compact frame (larger area in the top-right corner when "hidden")
+            // Compact frame (hover hotspot at absolute top-right corner, above menu bar)
             compactFrame = NSRect(
                 x: screenRect.maxX - 20,
                 y: screenRect.maxY - 20,
@@ -180,20 +181,15 @@ class TimerWindow: NSWindow {
     
     // Method to resize the window when timers are added or removed
     func resizeWindow(height: CGFloat) {
-        guard let expandedFrame = expandedFrame else { return }
-        
-        // Create a new frame with the updated height
+        guard let screen = NSScreen.main else { return }
+        let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 24
         let newFrame = NSRect(
-            x: expandedFrame.origin.x,
-            y: expandedFrame.origin.y - (height - expandedFrame.height),
-            width: expandedFrame.width,
+            x: screen.frame.maxX - 130,
+            y: screen.frame.maxY - menuBarHeight - height,
+            width: 120,
             height: height
         )
-        
-        // Update the expanded frame
         self.expandedFrame = newFrame
-        
-        // If currently expanded, animate to the new size
         if expanded {
             NSAnimationContext.runAnimationGroup({ context in
                 context.duration = 0.3
