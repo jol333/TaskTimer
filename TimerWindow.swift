@@ -201,8 +201,8 @@ class TimerWindow: NSWindow {
     
     // Add a new timer view to this window
     func addTimerView() {
-        // Calculate position for the new timer view
-        let yPosition = 30 + (timerViews.count * 80)
+        // Calculate position for the new timer view with 2px gap
+        let yPosition = 30 + (timerViews.count * (80 + 2)) // Add 2px gap between timers
         
         // Create and add a new timer view
         let newTimerView = TimerView(frame: NSRect(x: 0, y: yPosition, width: 120, height: 80))
@@ -254,7 +254,7 @@ class TimerWindow: NSWindow {
         
         // Reposition remaining timer views and buttons
         for i in 0..<timerViews.count {
-            let yPosition = 30 + (i * 80)
+            let yPosition = 30 + (i * (80 + 2)) // Add 2px gap between timers
             timerViews[i].frame.origin.y = CGFloat(yPosition)
             
             if i < removeButtons.count {
@@ -292,7 +292,7 @@ class TimerWindow: NSWindow {
         removeTimerView(at: sender.tag)
         
         // Update the window height
-        let newHeight = CGFloat(30 + (timerViews.count * 80) + 25)  // Base height + (timer count * timer height) + add button height
+        let newHeight = CGFloat(30 + (timerViews.count * (80 + 2)) + 25)  // Base height + (timer count * (timer height + gap)) + add button height
         resizeWindow(height: newHeight)
     }
     
