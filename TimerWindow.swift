@@ -47,7 +47,7 @@ class TimerWindow: NSWindow {
         // Calculate frames for expanded and compact states
         if let screen = NSScreen.main {
             let screenRect = screen.frame  // Use frame instead of visibleFrame to include menu bar area
-            let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 24 // fallback to 24 if not available
+            let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 50 // fallback to 50 if not available
 
             // Expanded frame (normal position when visible)
             expandedFrame = NSRect(
@@ -77,20 +77,20 @@ class TimerWindow: NSWindow {
         containerView.addSubview(firstTimerView)
         
         // Create and add a remove button for the first timer
-        let removeButton = createRemoveButton(yPosition: 85)
+        let removeButton = createRemoveButton(yPosition: 86)
         containerView.addSubview(removeButton)
         removeButtons.append(removeButton)
         
         // Create and add the "Add Timer" button
-        let addButton = CursorButton(frame: NSRect(x: 0, y: 0, width: 120, height: 25))
+        let addButton = CursorButton(frame: NSRect(x: 0, y: 0, width: 120, height: 24))
         addButton.title = "+ Add Timer"
         addButton.bezelStyle = .inline
         addButton.isBordered = false
         addButton.font = NSFont.systemFont(ofSize: 12)
         addButton.contentTintColor = .white
         addButton.wantsLayer = true
-        addButton.layer?.backgroundColor = NSColor.darkGray.withAlphaComponent(0.7).cgColor
-        addButton.layer?.cornerRadius = 5
+        addButton.layer?.backgroundColor = NSColor.darkGray.withAlphaComponent(0.5).cgColor
+        addButton.layer?.cornerRadius = 4
         addButton.target = NSApp.delegate
         addButton.action = #selector(AppDelegate.addNewTimer)
         
@@ -109,8 +109,6 @@ class TimerWindow: NSWindow {
         firstTimerView.onMouseExit = { [weak self] in
             self?.scheduleHideTimer()
         }
-        
-        // CursorButton handles its own tracking area
 
         // Schedule initial hide after 2 seconds
         scheduleHideTimer()
@@ -182,7 +180,7 @@ class TimerWindow: NSWindow {
     // Method to resize the window when timers are added or removed
     func resizeWindow(height: CGFloat) {
         guard let screen = NSScreen.main else { return }
-        let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 24
+        let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight ?? 50
         let newFrame = NSRect(
             x: screen.frame.maxX - 130,
             y: screen.frame.maxY - menuBarHeight - height,
@@ -192,7 +190,7 @@ class TimerWindow: NSWindow {
         self.expandedFrame = newFrame
         if expanded {
             NSAnimationContext.runAnimationGroup({ context in
-                context.duration = 0.3
+                context.duration = 0.01
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 animator().setFrame(newFrame, display: true)
             })
@@ -280,7 +278,7 @@ class TimerWindow: NSWindow {
         removeButton.contentTintColor = .white
         removeButton.wantsLayer = true
         removeButton.layer?.backgroundColor = NSColor.darkGray.withAlphaComponent(0.5).cgColor
-        removeButton.layer?.cornerRadius = 3
+        removeButton.layer?.cornerRadius = 4
         removeButton.target = self  // Change target to self instead of AppDelegate
         removeButton.action = #selector(removeButtonClicked(_:))  // Change action to local method
         removeButton.tag = removeButtons.count  // Set tag to identify which timer this button belongs to
@@ -292,7 +290,7 @@ class TimerWindow: NSWindow {
         removeTimerView(at: sender.tag)
         
         // Update the window height
-        let newHeight = CGFloat(30 + (timerViews.count * (80 + 2)) + 25)  // Base height + (timer count * (timer height + gap)) + add button height
+        let newHeight = CGFloat(30 + (timerViews.count * (80 + 2)) + 24)  // Base height + (timer count * (timer height + gap)) + add button height
         resizeWindow(height: newHeight)
     }
     
