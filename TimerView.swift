@@ -14,7 +14,7 @@ class TimerView: NSView, NSTextFieldDelegate {
     private var elapsedTime: TimeInterval = 0
     private var isRunning = false
     private var timeLabel: TimerTextField
-    private var taskLabel: NSTextField
+    private var taskLabel: TimerTextField
     private var trackingArea: NSTrackingArea?
 
     var onMouseEnter: (() -> Void)?
@@ -22,7 +22,7 @@ class TimerView: NSView, NSTextFieldDelegate {
 
     override init(frame frameRect: NSRect) {
         // Create the task label (editable)
-        taskLabel = NSTextField(
+        taskLabel = TimerTextField(
             frame: NSRect(
                 x: 5,
                 y: frameRect.height - 30,
