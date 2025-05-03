@@ -120,29 +120,4 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             timerWindow.resizeWindow(height: newHeight)
         }
     }
-    
-    @objc func removeTimer(_ sender: NSButton) {
-        guard let timerWindow = window else { return }
-        
-        // Find the timer view associated with this button
-        let buttonPosition = sender.frame.origin.y
-        let timerIndex = Int((buttonPosition - 85) / 80) + 1
-        
-        // Make sure the index is valid
-        if timerIndex >= 0 && timerIndex < timerWindow.timerViews.count {
-            // Remove the timer view and its remove button
-            timerWindow.removeTimerView(at: timerIndex)
-            
-            // Calculate the new height based on remaining timer views
-            let baseHeight: CGFloat = 110 // Height for a single timer
-            let additionalHeight: CGFloat = 80 // Height for each additional timer
-            let timerCount = timerWindow.timerViews.count
-            
-            // Calculate new height
-            let newHeight = baseHeight + (additionalHeight * CGFloat(timerCount - 1))
-            
-            // Resize the window
-            timerWindow.resizeWindow(height: newHeight)
-        }
-    }
 }

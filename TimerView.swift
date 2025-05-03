@@ -19,58 +19,11 @@ class TimerView: NSView, NSTextFieldDelegate {
     
     // Unique identifier for this timer view
     var timerId: String
-    // If restoring, allow setting timerId
+    
+    // Single initializer that handles both cases
     init(frame frameRect: NSRect, timerId: String? = nil) {
-        if let tid = timerId {
-            self.timerId = tid
-        } else {
-            self.timerId = UUID().uuidString
-        }
-        // Create the task label (editable)
-        taskLabel = TimerTextField(
-            frame: NSRect(
-                x: 5,
-                y: frameRect.height - 30,
-                width: frameRect.width - 10,
-                height: 25))
-        taskLabel.isEditable = true
-        taskLabel.isBordered = false
-        taskLabel.backgroundColor = .clear
-        taskLabel.textColor = .white
-        taskLabel.alignment = .left
-        taskLabel.font = NSFont.systemFont(ofSize: 14)
-        taskLabel.stringValue = "Task name"
-        taskLabel.placeholderString = "Enter task name"
-        taskLabel.focusRingType = .none
-        // Create the time display label with pointing hand cursor
-        timeLabel = TimerTextField(
-            frame: NSRect(
-                x: 0, y: 5,
-                width: frameRect.width,
-                height: 40))
-        timeLabel.isEditable = false
-        timeLabel.isBordered = false
-        timeLabel.backgroundColor = .clear
-        timeLabel.textColor = .white
-        timeLabel.alignment = .center
-        timeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 24, weight: .regular)
-        timeLabel.stringValue = "00:00:00"
-        super.init(frame: frameRect)
-        taskLabel.delegate = self
-        addSubview(taskLabel)
-        addSubview(timeLabel)
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.7).cgColor
-        layer?.cornerRadius = 10
-        updateTrackingAreas()
-    }
-
-    var onMouseEnter: (() -> Void)?
-    var onMouseExit: (() -> Void)?
-
-    override init(frame frameRect: NSRect) {
-        // Generate a unique ID for this timer
-        timerId = UUID().uuidString
+        // Use provided ID or generate a new one
+        self.timerId = timerId ?? UUID().uuidString
         
         // Create the task label (editable)
         taskLabel = TimerTextField(
@@ -120,6 +73,9 @@ class TimerView: NSView, NSTextFieldDelegate {
         // Enable mouse tracking
         updateTrackingAreas()
     }
+
+    var onMouseEnter: (() -> Void)?
+    var onMouseExit: (() -> Void)?
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -214,7 +170,7 @@ class TimerView: NSView, NSTextFieldDelegate {
         timeLabel.stringValue = String(format: "%02d:%02d:%02d", hrs, mins, secs)
     }
 
-    func reset() {
+    @objc func reset() {
         stopTimer()
         elapsedTime = 0
         updateDisplay()
@@ -229,7 +185,7 @@ class TimerView: NSView, NSTextFieldDelegate {
         menu.addItem(
             NSMenuItem(
                 title: "Reset Timer",
-                action: #selector(resetTimerOnly),
+                action: #selector(reset),
                 keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(
@@ -238,10 +194,6 @@ class TimerView: NSView, NSTextFieldDelegate {
                 action: #selector(NSApplication.terminate(_:)),
                 keyEquivalent: "q"))
         NSMenu.popUpContextMenu(menu, with: event, for: self)
-    }
-
-    @objc private func resetTimerOnly() {
-        reset()
     }
     
     // MARK: - Persistence Methods

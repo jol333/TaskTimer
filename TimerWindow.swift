@@ -328,39 +328,4 @@ class TimerWindow: NSWindow {
         UserDefaults.standard.set(timerIds, forKey: "timerOrder")
         UserDefaults.standard.synchronize()
     }
-
-    // Restore all timers from UserDefaults and layout them properly
-    func restoreTimers() {
-        // Remove all current timer views and remove buttons from container
-        for view in timerViews { view.removeFromSuperview() }
-        for button in removeButtons { button.removeFromSuperview() }
-        timerViews.removeAll()
-        removeButtons.removeAll()
-        
-        // Get saved timer order
-        let timerIds = UserDefaults.standard.array(forKey: "timerOrder") as? [String] ?? []
-        
-        // For each timerId, create a TimerView and add to container
-        for (i, timerId) in timerIds.enumerated() {
-            let yPosition = 30 + (i * (80 + 2))
-            let timerView = TimerView(frame: NSRect(x: 0, y: yPosition, width: 120, height: 80), timerId: timerId)
-            containerView.addSubview(timerView)
-            timerViews.append(timerView)
-            // Set up mouse tracking
-            timerView.onMouseEnter = { [weak self] in self?.cancelHideTimer(); self?.showExpanded() }
-            timerView.onMouseExit = { [weak self] in self?.scheduleHideTimer() }
-            // Add remove button
-            let removeButton = createRemoveButton(yPosition: CGFloat(yPosition) + 55)
-            containerView.addSubview(removeButton)
-            removeButtons.append(removeButton)
-        }
-        // Reposition add button to bottom
-        if let addButton = self.addButton {
-            let addButtonY = timerViews.count > 0 ? CGFloat(30 + (timerViews.count * (80 + 2))) : 0
-            addButton.frame.origin.y = addButtonY
-        }
-        // Resize window to fit all timers and add button
-        let newHeight = CGFloat(30 + (timerViews.count * (80 + 2)) + 24)
-        resizeWindow(height: newHeight)
-    }
 }
