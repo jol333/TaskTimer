@@ -1,5 +1,53 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+# UI Components Guide
+
+This guide explains the main UI components in the TaskTimer application:
+
+## Window Management
+
+[TimerWindow.swift](mdc:TimerWindow.swift) implements the main application window with these key features:
+- Auto-hiding/expanding behavior on mouse hover
+- Support for multiple timer instances
+- Add/remove timer functionality
+- Positioning at the top right of the screen
+- Transparent and borderless window style
+
+Important methods:
+- `showExpanded()`: Animates the window to its expanded state
+- `hideCompact()`: Animates the window to its compact state
+- `scheduleHideTimer()`: Sets up automatic hiding after inactivity
+- `resizeWindow()`: Adjusts window size when timers are added/removed
+
+## Timer Component
+
+[TimerView.swift](mdc:TimerView.swift) implements an individual timer with these key features:
+- Time display with monospaced digits
+- Editable task name field
+- Click to start/stop functionality
+- Right-click context menu for reset/quit
+- Persistence of timer state
+
+Important methods:
+- `toggleTimer()`: Starts or stops the timer
+- `updateTimer()`: Updates the elapsed time display
+- `reset()`: Resets the timer to zero
+- `saveState()`: Persists timer state to UserDefaults
+
+## Custom UI Elements
+
+- [TimerTextField.swift](mdc:TimerTextField.swift): Custom text field used for both task name and time display
+- [CursorButton.swift](mdc:CursorButton.swift): Custom button implementation with cursor handling
+
+## UI Interactions
+
+- Clicking the timer toggles start/stop
+- Clicking the task name allows editing
+- Right-click shows context menu
+- Mouse hover expands the window
+- Mouse exit starts hide timer (2 second delay)
+- "Add Timer" button creates new timer instances
+- "X" buttons remove specific timers

@@ -1,5 +1,57 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+# Application Lifecycle Guide
+
+This guide explains the application lifecycle and state management in TaskTimer:
+
+## Application Startup
+
+The application flow starts in [main.swift](mdc:main.swift), which:
+- Creates the NSApplication instance
+- Instantiates the AppDelegate
+- Starts the main run loop
+
+[AppDelegate.swift](mdc:AppDelegate.swift) handles:
+- Application initialization
+- Menu bar configuration
+- Creating the main TimerWindow
+- Handling application termination
+- Adding/removing timers
+
+## State Management
+
+Timer state is managed through several mechanisms:
+
+1. **UserDefaults Persistence**:
+   - Timer state (elapsed time, task name, running status) is saved in UserDefaults
+   - Timer instances are identified by unique IDs (UUIDs)
+   - Timer order is preserved for consistent UI across app launches
+
+2. **Save Triggers**:
+   - When timer is started/stopped (`startTimer()`, `stopTimer()`)
+   - When timer is reset (`reset()`)
+   - Periodically during timing (every 5 seconds)
+   - When app enters background
+   - Before app termination
+
+3. **State Restoration**:
+   - On app launch, saved timers are restored
+   - Timer position, elapsed time, task name, and running status are all preserved
+
+## Building and Distribution
+
+The [build.sh](mdc:build.sh) script handles:
+- Compiling Swift files
+- Creating the application bundle structure
+- Copying resources to the bundle
+- Making the app executable
+
+To build the application:
+```
+./build.sh
+```
+
+The resulting TaskTimer.app can be run directly or moved to the Applications folder.
