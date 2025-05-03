@@ -16,11 +16,62 @@ class TimerView: NSView, NSTextFieldDelegate {
     private var timeLabel: TimerTextField
     private var taskLabel: TimerTextField
     private var trackingArea: NSTrackingArea?
+    
+    // Unique identifier for this timer view
+    var timerId: String
+    // If restoring, allow setting timerId
+    init(frame frameRect: NSRect, timerId: String? = nil) {
+        if let tid = timerId {
+            self.timerId = tid
+        } else {
+            self.timerId = UUID().uuidString
+        }
+        // Create the task label (editable)
+        taskLabel = TimerTextField(
+            frame: NSRect(
+                x: 5,
+                y: frameRect.height - 30,
+                width: frameRect.width - 10,
+                height: 25))
+        taskLabel.isEditable = true
+        taskLabel.isBordered = false
+        taskLabel.backgroundColor = .clear
+        taskLabel.textColor = .white
+        taskLabel.alignment = .left
+        taskLabel.font = NSFont.systemFont(ofSize: 14)
+        taskLabel.stringValue = "Task name"
+        taskLabel.placeholderString = "Enter task name"
+        taskLabel.focusRingType = .none
+        // Create the time display label with pointing hand cursor
+        timeLabel = TimerTextField(
+            frame: NSRect(
+                x: 0, y: 5,
+                width: frameRect.width,
+                height: 40))
+        timeLabel.isEditable = false
+        timeLabel.isBordered = false
+        timeLabel.backgroundColor = .clear
+        timeLabel.textColor = .white
+        timeLabel.alignment = .center
+        timeLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 24, weight: .regular)
+        timeLabel.stringValue = "00:00:00"
+        super.init(frame: frameRect)
+        taskLabel.delegate = self
+        addSubview(taskLabel)
+        addSubview(timeLabel)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.7).cgColor
+        layer?.cornerRadius = 10
+        updateTrackingAreas()
+    }
 
     var onMouseEnter: (() -> Void)?
     var onMouseExit: (() -> Void)?
 
     override init(frame frameRect: NSRect) {
+        // Generate a unique ID for this timer
+        timerId = UUID().uuidString
+        
         // Create the task label (editable)
         taskLabel = TimerTextField(
             frame: NSRect(
@@ -132,17 +183,28 @@ class TimerView: NSView, NSTextFieldDelegate {
             repeats: true)
         isRunning = true
         RunLoop.current.add(timer!, forMode: .common)
+        
+        // Save state when timer is started
+        saveState()
     }
 
     func stopTimer() {
         timer?.invalidate()
         timer = nil
         isRunning = false
+        
+        // Save state when timer is stopped
+        saveState()
     }
 
     @objc private func updateTimer() {
         elapsedTime += 0.1
         updateDisplay()
+        
+        // Save state periodically (every 5 seconds) to handle force quits
+        if Int(elapsedTime * 10) % 50 == 0 { // Every 5 seconds (50 * 0.1s)
+            saveState()
+        }
     }
 
     private func updateDisplay() {
@@ -156,6 +218,9 @@ class TimerView: NSView, NSTextFieldDelegate {
         stopTimer()
         elapsedTime = 0
         updateDisplay()
+        
+        // Save state when timer is reset
+        saveState()
     }
 
     // Context menu for reset/quit
@@ -178,13 +243,63 @@ class TimerView: NSView, NSTextFieldDelegate {
     @objc private func resetTimerOnly() {
         reset()
     }
-
+    
+    // MARK: - Persistence Methods
+    
+    // Save timer state to UserDefaults
+    func saveState() {
+        let defaults = UserDefaults.standard
+        
+        // Create a dictionary to store timer state
+        let timerState: [String: Any] = [
+            "elapsedTime": elapsedTime,
+            "isRunning": isRunning,
+            "taskName": taskLabel.stringValue
+        ]
+        
+        // Save the timer state using its unique ID
+        defaults.set(timerState, forKey: "timer_\(timerId)")
+        
+        // Save immediately to handle force quits
+        defaults.synchronize()
+    }
+    
+    // Load timer state from UserDefaults
+    func loadState() -> Bool {
+        let defaults = UserDefaults.standard
+        
+        // Try to retrieve the timer state using its unique ID
+        if let timerState = defaults.dictionary(forKey: "timer_\(timerId)") {
+            // Restore elapsed time
+            if let savedTime = timerState["elapsedTime"] as? TimeInterval {
+                elapsedTime = savedTime
+                updateDisplay()
+            }
+            
+            // Restore task name
+            if let taskName = timerState["taskName"] as? String {
+                taskLabel.stringValue = taskName
+            }
+            
+            // Restore running state if it was running
+            if let wasRunning = timerState["isRunning"] as? Bool, wasRunning {
+                startTimer()
+            }
+            
+            return true
+        }
+        
+        return false
+    }
+    
     // Pause hide when editing, resume after
     func controlTextDidBeginEditing(_ obj: Notification) {
         (window as? TimerWindow)?.cancelHideTimer()
     }
-
+    
     func controlTextDidEndEditing(_ obj: Notification) {
+        // Save state when task name is edited
+        saveState()
         (window as? TimerWindow)?.scheduleHideTimer()
     }
 

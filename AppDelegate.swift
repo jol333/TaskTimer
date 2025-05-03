@@ -15,6 +15,55 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Configure the app menu
         setupMenu()
+        
+        // Load saved timer states
+        loadSavedTimerStates()
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        // Save all timer states when app is about to terminate
+        saveAllTimerStates()
+    }
+    
+    // Save states of all timers
+    private func saveAllTimerStates() {
+        if let timerWindow = window {
+            for timerView in timerWindow.timerViews {
+                timerView.saveState()
+            }
+        }
+    }
+    
+    // Load saved timer states and create timers for them
+    private func loadSavedTimerStates() {
+        let defaults = UserDefaults.standard
+        let allKeys = defaults.dictionaryRepresentation().keys
+        let timerKeys = allKeys.filter { $0.hasPrefix("timer_") }
+        if timerKeys.count > 0 {
+            let savedTimerOrder = defaults.array(forKey: "timerOrder") as? [String] ?? []
+            // Remove all existing timer views (including the default one)
+            if let timerWindow = window {
+                while timerWindow.timerViews.count > 0 {
+                    timerWindow.removeTimerView(at: 0)
+                }
+                // Add timer views for each saved timerId in order
+                for timerId in savedTimerOrder {
+                    timerWindow.addTimerView(timerId: timerId)
+                }
+                // Load state for each timer view
+                for timerView in timerWindow.timerViews {
+                    _ = timerView.loadState()
+                }
+                timerWindow.saveTimerOrder()
+                
+                // Resize the window to fit all loaded timers
+                let timerCount = timerWindow.timerViews.count
+                let baseHeight: CGFloat = 110 // Height for a single timer
+                let additionalHeight: CGFloat = 80 // Height for each additional timer
+                let newHeight = baseHeight + (additionalHeight * CGFloat(timerCount - 1))
+                timerWindow.resizeWindow(height: newHeight)
+            }
+        }
     }
 
     private func setupMenu() {
